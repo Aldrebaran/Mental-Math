@@ -194,43 +194,43 @@ const QuizRoom = ({ quizId, onLeave }) => {
     const progress = (timeLeftPerSoal / maxWaktu) * 100;
 
     return (
-        <div className="fixed inset-0 bg-[#B2A4D4] z-1000 flex flex-col p-4 md:p-6 font-sans overflow-hidden h-screen">
+        <div className="fixed inset-0 bg-[#B2A4D4] z-1000 flex flex-col p-4 md:p-6 font-sans overflow-y-auto">
 
-            <div className="w-full max-w-4xl mx-auto flex justify-between items-center mb-2 md:mb-4 relative z-10">
+            <div className="w-full max-w-4xl mx-auto flex justify-between items-center mb-4 md:mb-8 relative z-10 shrink-0">
 
-                <div className="bg-[#F1C40F] border-4 border-black px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-2xl">
-                    <p className="font-black uppercase text-xs md:text-lg italic">
+                <div className="bg-[#F1C40F] border-4 border-black px-3 py-1 md:px-4 md:py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-2xl">
+                    <p className="font-black uppercase text-[10px] md:text-lg italic">
                         SOAL {currentIndex + 1} / {questions.length}
                     </p>
                 </div>
 
-                <div className="relative w-16 h-16 md:w-24 md:h-24 flex items-center justify-center bg-white border-4 border-black rounded-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <div className="relative w-14 h-14 md:w-24 md:h-24 flex items-center justify-center bg-white border-4 border-black rounded-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <svg className="absolute inset-0 w-full h-full transform -rotate-90 p-1">
-                        <circle cx="50%" cy="50%" r="45%" stroke="#eee" strokeWidth="8" fill="transparent" />
+                        <circle cx="50%" cy="50%" r="45%" stroke="#eee" strokeWidth="4" md:strokeWidth="8" fill="transparent" />
                         <circle 
                             cx="50%" cy="50%" r="45%"
-                            stroke="#F1C40F" strokeWidth="8" fill="transparent"
+                            stroke="#F1C40F" strokeWidth="4" md:strokeWidth="8" fill="transparent"
                             strokeDasharray="283"
                             strokeDashoffset={283 - (283 * progress) / 100}
                             style={{ transition: 'stroke-dashoffset 1s linear' }}
                         />
                     </svg>
-                    <span className="text-xl md:text-3xl font-black italic">{timeLeftPerSoal}</span>
+                    <span className="text-lg md:text-3xl font-black italic">{timeLeftPerSoal}</span>
                 </div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center py-2 md:py-4 relative z-10 min-h-0">
-                <div className="bg-white border-4 border-black p-6 md:p-10 rounded-[30px] md:rounded-[40px] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-2xl text-center relative flex flex-col justify-center">
+            <div className="flex-1 flex flex-col items-center justify-center py-2 relative z-10">
+                <div className="bg-white border-4 border-black p-5 md:p-10 rounded-[30px] md:rounded-[40px] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-2xl text-center relative">
 
-                    <div className="text-[#3498DB] font-black text-xs md:text-sm uppercase tracking-widest mb-4">
+                    <div className="text-[#3498DB] font-black text-[10px] md:text-sm uppercase tracking-widest mb-2 md:mb-4">
                         {currentSoal?.TINGKAT_KESULITAN || "MATH"}
                     </div>
                     
-                    <h2 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 md:mb-10 tracking-tighter leading-none italic text-black">
+                    <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black mb-4 md:mb-10 tracking-tighter leading-none italic text-black">
                         {currentSoal?.teksTampilan}
                     </h2>
 
-                    <div className="relative max-w-xs md:max-w-md mx-auto w-full">
+                    <div className="relative max-w-60 md:max-w-md mx-auto w-full">
                         <input 
                             type="number"
                             inputMode="numeric"
@@ -238,22 +238,22 @@ const QuizRoom = ({ quizId, onLeave }) => {
                             value={userAnswers[currentSoal?.ID_SOAL] || ""}
                             onChange={(e) => setUserAnswers({...userAnswers, [currentSoal.ID_SOAL]: e.target.value})}
                             onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                            className="w-full bg-white border-4 border-black rounded-2xl p-3 md:p-5 text-3xl md:text-5xl text-center font-black outline-none shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:translate-y-1 transition-all"
+                            className="w-full bg-white border-4 border-black rounded-2xl p-2 md:p-5 text-2xl md:text-5xl text-center font-black outline-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:translate-y-1 transition-all"
                             placeholder="???"        
                         />
                     </div>
 
-                    <p className="mt-4 md:mt-6 font-black text-gray-400 uppercase text-[10px] tracking-widest animate-pulse">
+                    <p className="hidden md:block mt-6 font-black text-gray-400 uppercase text-[10px] tracking-widest animate-pulse">
                         TEKAN ENTER UNTUK LANJUT
                     </p>
                 </div>
             </div>
 
-            <div className="flex justify-center pb-2 md:pb-4 relative z-10">
+            <div className="w-full max-w-2xl mx-auto flex justify-center pt-4 pb-6 md:pb-8 relative z-10 shrink-0">
                 <button
                     onClick={handleNext}
                     disabled={isSubmitting}
-                    className={`w-full md:w-80 border-4 border-black px-6 py-3 md:py-4 rounded-2xl font-black uppercase text-lg md:text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 transition-all ${
+                    className={`w-full border-4 border-black px-6 py-3 md:py-4 rounded-2xl font-black uppercase text-base md:text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 transition-all ${
                         currentIndex === questions.length - 1
                         ? 'bg-[#F1C40F] text-black'
                         : 'bg-[#5DADE2] text-white'

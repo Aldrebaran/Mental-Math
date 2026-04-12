@@ -3,7 +3,7 @@ import { auth, db } from "../lib/Firebase";
 import { collection, getDocs, addDoc, serverTimestamp, onSnapshot, query, where } from "firebase/firestore";
 import QuizRoom from "../components/QuizRoom";
 
-const KuisMainContent = ({role, onViewProgress}) => {
+const KuisMainContent = ({role}) => {
 
     const [localQuizzes, setLocalQuizzes] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -285,20 +285,14 @@ const KuisMainContent = ({role, onViewProgress}) => {
                                         </div>
                                     </div>
 
-                                    <button
-                                        onClick={() => {
-                                            if (isSiswa) {
-                                                setActiveQuizId(quiz.id);
-                                            } else {
-                                                onViewProgress(quiz.id);
-                                            }
-                                        }}
-                                        className={`mt-5 w-full py-3 rounded-xl md:rounded-2xl font-black uppercase text-xs md:text-sm tracking-tighter transition-all active:scale-[0.98] ${
-                                            isSiswa ? 'bg-[#5DADE2] text-white shadow-md hover:bg-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                        }`}
-                                    >
-                                        {isSiswa ? 'MULAI KUIS' : 'LIHAT PROGRES'}
-                                    </button>
+                                    {isSiswa && (
+                                        <button
+                                            onClick={() => setActiveQuizId(quiz.id)}
+                                            className="mt-5 w-full py-3 rounded-xl md:rounded-2xl font-black uppercase text-xs md:text-sm tracking-tighter transition-all active:scale-[0.98] bg-[#5DADE2] text-white shadow-md hover:bg-blue-600"
+                                        >
+                                            MULAI KUIS
+                                        </button>
+                                    )}
                                 </div>
                             );
                         })

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { User, Mail, Lock, Key, GraduationCap } from "lucide-react";
 import { registerUser } from "../Services/AuthService";
-import { collection, getDocs } from "firebase/firestore";   
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";   
 import { db } from "../lib/Firebase";   
 
 const Register = () => {
@@ -24,11 +24,25 @@ const Register = () => {
             try{
 
                 const querySnapshot = await getDocs(collection(db,"KELAS"));
-                const list = querySnapshot.docs.map(doc =>({
-                    id: doc.id,
-                    ...doc.data()
+                const list =  await Promise.all(querySnapshot.docs.map(async (docSnap) => {
+                    const data = docSnap.data();
+                    let teksTahun = "Tidak Ada Tahun";
+
+                    if (data.TAHUN_AJARAN) {
+                        const tahunDoc = await getDoc(doc(db, "TAHUN_AJARAN", data.TAHUN_AJARAN));
+                        if (tahunDoc.exists()) {
+                            teksTahun = tahunDoc.data().TAHUN;
+                        }
+                    }
+
+                    return {
+                        id: docSnap.id,
+                        ...data,
+                        tampilTahun: teksTahun
+                    };
                 }));
-                setDaftarKelas(list);
+
+                 setDaftarKelas(list);
             } catch (err) {
                 console.error("Gagal Mengambil Daftar Kelas", err);
             }
@@ -167,7 +181,7 @@ const Register = () => {
                                     {daftarKelas.length > 0 ? (
                                         daftarKelas.map((item) => (
                                             <option key={item.id} value={item.id}>
-                                                Kelas {item.NAMA_KELAS} {item.TAHUN_AJARAN ? `(${item.TAHUN_AJARAN})` : ""}
+                                                Kelas {item.NAMA_KELAS} ({item.tampilTahun})
                                             </option>
                                         ))
                                     

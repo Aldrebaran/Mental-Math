@@ -632,7 +632,7 @@ const ManajemenSiswa = ()  =>{
                                                         .filter(s => {
                                                             const searchLow = (searchSiswaHapus || "").toString().toLowerCase();
 
-                                                            const matchKelas = s.ID_KELAS === selectedHapusKelas;
+                                                            const matchKelas = selectedHapusKelas ? (s.ID_KELAS === selectedHapusKelas || s.KELAS === selectedHapusKelas) : true;
                                                             const matchSearch = (s.NAMA_SISWA || "").toString().toLowerCase().includes(searchLow);
 
                                                             return matchKelas && matchSearch;
@@ -649,7 +649,12 @@ const ManajemenSiswa = ()  =>{
                                                                     }
                                                                     className={`flex justify-between items-center p-2 px-4 rounded-xl border-2 border-black cursor-pointer transition-all active:scale-[0.98] ${isChecked ? 'bg-red-50 border-red-600' : 'bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'}`}
                                                                 >
-                                                                    <span className="text-[10px] font-black text-black uppercase">{siswa.NAMA_SISWA}</span>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[7px] font-black opacity-40 uppercase leading-none text-left">
+                                                                        {daftarKelas.find(k => k.id === (siswa.ID_KELAS || siswa.KELAS))?.NAMA_KELAS || "Tanpa Kelas"}                              
+                                                                    </span>
+                                                                    <span className="text-[10px] font-black text-black uppercase text-left">{siswa.NAMA_SISWA}</span>
+                                                                </div>
                                                                     <div className={`w-4 h-4 rounded border-2 border-black flex items-center justify-center transition-all ${isChecked ? 'bg-red-600' : 'bg-white'}`}>
                                                                         {isChecked && <Check size={10} className="text-white font-bold"/>}
                                                                     </div>
@@ -657,7 +662,7 @@ const ManajemenSiswa = ()  =>{
                                                             );
                                                         })}
                                                         
-                                                    {selectedHapusKelas === "" && (
+                                                    {selectedHapusKelas === "" && dataSiswaModal.length === 0 && (
                                                         <div className="flex flex-col items-center justify-center mt-10 opacity-50">
                                                             <User size={32} className="text-white mb-2"/>
                                                             <p className="text-[9px] font-black text-white uppercase italic">Siswa akan muncul setelah kelas dipilih</p>                                                        

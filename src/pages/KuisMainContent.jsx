@@ -142,41 +142,74 @@ const KuisMainContent = ({role}) => {
     });
 
     useEffect(() => {
-        const q = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
+        let unsubscribeKuis = null;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const dataKuis = snapshot.docs.map(doc => {
+        const fetchKuisSpesifikSiswa = async () => {
+            try {
+                const user = auth.currentUser;
+                if (!user) return;
 
-                const d = doc.data();
+            
+                const qSiswa = query(collection(db, "SISWA"), where("uid", "==", user.uid));
+                const snapSiswa = await getDocs(qSiswa);
+            
+                if (snapSiswa.empty) {
+                    console.warn("Data siswa tidak ditemukan di koleksi SISWA");
+                    return;
+                }
 
-                const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
-                const sekarang = new Date();
+                const dataSiswa = snapSiswa.docs[0].data();
+                const idKelasSiswa = dataSiswa.ID_KELAS; 
 
-                const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
+           
+                const qKuis = query(
+                    collection(db, "KUIS"),
+                    where("STATUS", "==", "AKTIF"),
+                    where("idKelasTerpilih", "==", idKelasSiswa)
+                );
 
-                return {
-                    id: doc.id,
-                    ...d,
-                    title: d.JUDUL_KUIS,
-                    durationSeconds: actualRemaining,
-                    totalQuestions: d.LIST_SOAL?.length || 0
-                };  
-            });
+           
+                unsubscribeKuis = onSnapshot(qKuis, (snapshot) => {
+                    const dataKuis = snapshot.docs.map(doc => {
+                        const d = doc.data();
+                        const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
+                        const sekarang = new Date();
+                        const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
 
-            setLocalQuizzes(dataKuis);
+                        return {
+                            id: doc.id,
+                            ...d,
+                            title: d.JUDUL_KUIS,
+                            durationSeconds: actualRemaining,
+                            totalQuestions: d.LIST_SOAL?.length || 0
+                        };  
+                    });
 
-            setTimeLeft(prev => {
-                const newTimes = {...prev};
-                dataKuis.forEach(q => {
-                    newTimes[q.id] = q.durationSeconds;
+                    setLocalQuizzes(dataKuis);
+
+                
+                    setTimeLeft(prev => {
+                        const newTimes = {...prev};
+                        dataKuis.forEach(q => {
+                            newTimes[q.id] = q.durationSeconds;
+                        });
+                        return newTimes;
+                    });
+                }, (error) => {
+                    console.error("Gagal mengambil data kuis:", error);
                 });
-                return newTimes;
-            });
-        }, (error) => {
-            console.error("Gagal mengambil data kuis:", error);
-        });
 
-        return () => unsubscribe();
+            } catch (err) {
+                console.error("Error utama pada fetch kuis:", err);
+            }
+        };
+
+        fetchKuisSpesifikSiswa();
+
+    
+        return () => {
+            if (unsubscribeKuis) unsubscribeKuis();
+        };
     }, []);
 
     useEffect(() => {
@@ -215,8 +248,6 @@ const KuisMainContent = ({role}) => {
 
     fetchStats();
 }, [role]); 
-
-
 
     useEffect(() => {
         const timer = setInterval(() => {

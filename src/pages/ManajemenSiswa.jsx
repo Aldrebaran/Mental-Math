@@ -286,7 +286,7 @@ const ManajemenSiswa = ()  =>{
     return (
         <div className="flex flex-col items-center w-full p-4 md:p-8 space-y-8 pt-20 md:pt-8">
             <h1 className="text-lg md:text-2xl font-black text-black tracking-tight uppercase text-center leading-tight px-2">
-                MANAJEMEN SISWA {selectedKelas ? ` - KELAS ${selectedKelas}` : ""}
+                MANAJEMEN SISWA {selectedKelas ? ` - KELAS ${daftarKelas.find(k => k.id === selectedKelas)?.NAMA_KELAS || ""}` : ""}
             </h1>
 
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center lg:items-start justify-center w-full max-w-6xl">
@@ -325,7 +325,7 @@ const ManajemenSiswa = ()  =>{
                                     </div>
 
                                     <span className="font-black text-[9px] md:text-xs text-gray-600 uppercase">
-                                        {siswa.KELAS || selectedKelas}
+                                        {daftarKelas.find(k => k.id === siswa.ID_KELAS)?.NAMA_KELAS || "Tanpa Kelas"}
                                     </span>
                                 </div>
                             ))

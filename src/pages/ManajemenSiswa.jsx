@@ -570,7 +570,7 @@ const ManajemenSiswa = ()  =>{
                                                     disabled={selectedSiswaIds.length === 0 || !kelasTujuanPindah}
                                                     className={`w-full py-2 rounded-xl border-2 border-black font-black text-[10px] uppercase transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 ${selectedSiswaIds.length > 0 && kelasTujuanPindah ? 'bg-[#2ECC71] text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                                                 >
-                                                    {selectedSiswaIds.length > 0 ? `PINDAHKAN KE ${kelasTujuanPindah}` : 'PILIH SISWA & TUJUAN'}
+                                                    {selectedSiswaIds.length > 0 ? `PINDAHKAN KE ${daftarKelas.find(k => k.id === kelasTujuanPindah)?.NAMA_KELAS || kelasTujuanPindah}` : 'PILIH SISWA & TUJUAN'}
                                                 </button>
                                             </div>
                                         </div>

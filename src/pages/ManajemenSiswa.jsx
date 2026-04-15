@@ -53,7 +53,7 @@ const ManajemenSiswa = ()  =>{
         }
     }, [selectedTahun]);
 
-    const fetchTahunAjaran = useCallback (async () => {
+    const fetchTahunAjaran = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, "TAHUN_AJARAN"));
             const data = querySnapshot.docs.map(doc => ({ 
@@ -64,7 +64,7 @@ const ManajemenSiswa = ()  =>{
         } catch (err) {
             console.error("Error Fetch Tahun:", err);
         }
-    }, []);
+    };
 
     const handleTambahTahun = async () => {
     if (!newTahun.trim()) return alert("Masukkan tahun ajaran baru!");
@@ -88,35 +88,20 @@ const ManajemenSiswa = ()  =>{
 
     useEffect(() => {
         fetchTahunAjaran();
-    }, [fetchTahunAjaran]);
+    }, []);
 
     const fetchSiswa = useCallback(async () => {
 
-        if (!selectedTahun) {
+        if (!selectedKelas) {
             setDaftarSiswa([]);
             return;
         }
 
         setLoading(true);
         try {
-            let q;
-            if (selectedKelas) {
-                q = query(collection(db, "SISWA"), where('ID_KELAS', "==", selectedKelas));
-            } else {
-
-                const kelasTahunIni = daftarKelas
-                    .filter(k => k.TAHUN_AJARAN === selectedTahun)
-                    .map(k => k.id);
-                
-               if (kelasTahunIni.length === 0) {
-                setDaftarSiswa([]);
-                setLoading(false);
-                return;
-               }
-
-               q = query(collection(db, "SISWA"), where('ID_KELAS', 'in', kelasTahunIni));
-            }
-
+            
+            
+            const q = query(collection(db, "SISWA"), where('ID_KELAS', "==", selectedKelas));
             const snap = await getDocs(q);
             setDaftarSiswa(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 
@@ -125,7 +110,7 @@ const ManajemenSiswa = ()  =>{
         } finally {
             setLoading(false);
         }
-    }, [selectedKelas, selectedTahun, daftarKelas]); 
+    }, [selectedKelas]); 
 
     const fetchDataModal = async () => {
         try {
@@ -140,7 +125,7 @@ const ManajemenSiswa = ()  =>{
         fetchKelas();
         fetchSiswa();
         fetchTahunAjaran();
-    }, [fetchSiswa, fetchKelas, fetchTahunAjaran]);
+    }, [fetchSiswa, fetchKelas]);
 
     const handleTambahKelas = async () => {
         if (!newKelasName.trim() || !selectedTahun) return;

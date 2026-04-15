@@ -419,7 +419,7 @@ const ManajemenSiswa = ()  =>{
                                                 >
                                                     <option value="">TAMPILKAN SEMUA SISWA</option>
                                                     {daftarKelas.map((item) => (
-                                                        <option key={item.id} value={item.NAMA_KELAS}>
+                                                        <option key={item.id} value={item.id}>
                                                             Kelas {item.NAMA_KELAS}
                                                         </option>
                                                     ))}
@@ -430,7 +430,7 @@ const ManajemenSiswa = ()  =>{
                                                 {dataSiswaModal
                                                     .filter((siswa) => {
                                                         const matchSearch = siswa.NAMA_SISWA?.toLowerCase().includes(searchTerm.toLowerCase());
-                                                        const matchKelas = filterKelasSiswa ? siswa.KELAS === filterKelasSiswa : true;
+                                                        const matchKelas = filterKelasSiswa ? (siswa.ID_KELAS === filterKelasSiswa || siswa.KELAS === filterKelasSiswa) : true;
 
                                                         return matchSearch && matchKelas;
                                                     })
@@ -446,7 +446,7 @@ const ManajemenSiswa = ()  =>{
                                                                 />
                                                             ) : (
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-[8px] font-black opacity-50 uppercase leading-none">{siswa.KELAS}</span>
+                                                                    <span className="text-[8px] font-black opacity-50 uppercase leading-none">{daftarKelas.find(k => k.id === (siswa.ID_KELAS || siswa.KELAS))?.NAMA_KELAS || "Tanpa Kelas"}</span>
                                                                     <span className="text-[10px] font-black uppercase truncate mr-2">{siswa.NAMA_SISWA}</span>
                                                                 </div>
                                                             )}
@@ -592,7 +592,7 @@ const ManajemenSiswa = ()  =>{
                                                     }}
                                                     className="w-full bg-white border-2 border-black rounded-xl p-2 text-[10px] font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] outline-none"
                                                 >
-                                                    <option value="">PILIH KELAS</option>
+                                                    <option value="">SEMUA</option>
                                                     {daftarKelas.map((kelas) => (
                                                         <option key={kelas.id} value={kelas.NAMA_KELAS}>{kelas.NAMA_KELAS}</option>
                                                     ))}

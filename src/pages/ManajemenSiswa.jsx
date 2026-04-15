@@ -430,7 +430,7 @@ const ManajemenSiswa = ()  =>{
                                                 {dataSiswaModal
                                                     .filter((siswa) => {
                                                         const matchSearch = siswa.NAMA_SISWA?.toLowerCase().includes(searchTerm.toLowerCase());
-                                                        const matchKelas = filterKelasSiswa ? (siswa.ID_KELAS === filterKelasSiswa || siswa.KELAS === filterKelasSiswa) : true;
+                                                        const matchKelas = filterKelasSiswa ? (siswa.ID_KELAS === filterKelasSiswa) : true;
 
                                                         return matchSearch && matchKelas;
                                                     })
@@ -446,7 +446,7 @@ const ManajemenSiswa = ()  =>{
                                                                 />
                                                             ) : (
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-[8px] font-black opacity-50 uppercase leading-none">{daftarKelas.find(k => k.id === (siswa.ID_KELAS || siswa.KELAS))?.NAMA_KELAS || "Tanpa Kelas"}</span>
+                                                                    <span className="text-[8px] font-black opacity-50 uppercase leading-none">{daftarKelas.find(k => k.id === siswa.ID_KELAS)?.NAMA_KELAS || "Tanpa Kelas"}</span>
                                                                     <span className="text-[10px] font-black uppercase truncate mr-2">{siswa.NAMA_SISWA}</span>
                                                                 </div>
                                                             )}
@@ -544,7 +544,7 @@ const ManajemenSiswa = ()  =>{
                                                 {dataSiswaModal
                                                     .filter(s => {
                                                         const mSearch = s.NAMA_SISWA?.toLowerCase().includes(searchTerm.toLowerCase());
-                                                        const mKelas = filterKelasSiswa ? s.KELAS === filterKelasSiswa : true;
+                                                        const mKelas = filterKelasSiswa ? s.ID_KELAS === filterKelasSiswa : true;
                                                         return mSearch && mKelas;
                                                     })
                                                     .map(s => (
@@ -594,7 +594,7 @@ const ManajemenSiswa = ()  =>{
                                                 >
                                                     <option value="">SEMUA</option>
                                                     {daftarKelas.map((kelas) => (
-                                                        <option key={kelas.id} value={kelas.NAMA_KELAS}>{kelas.NAMA_KELAS}</option>
+                                                        <option key={kelas.id} value={kelas.id}>{kelas.NAMA_KELAS}</option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -632,7 +632,7 @@ const ManajemenSiswa = ()  =>{
                                                         .filter(s => {
                                                             const searchLow = (searchSiswaHapus || "").toString().toLowerCase();
 
-                                                            const matchKelas = s.KELAS === selectedHapusKelas;
+                                                            const matchKelas = s.ID_KELAS === selectedHapusKelas;
                                                             const matchSearch = (s.NAMA_SISWA || "").toString().toLowerCase().includes(searchLow);
 
                                                             return matchKelas && matchSearch;

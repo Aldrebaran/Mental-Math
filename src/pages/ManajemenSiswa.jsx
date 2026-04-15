@@ -92,7 +92,7 @@ const ManajemenSiswa = ()  =>{
 
     const fetchSiswa = useCallback(async () => {
 
-        if (!selectedKelas) {
+        if (!selectedTahun) {
             setDaftarSiswa([]);
             return;
         }
@@ -102,24 +102,30 @@ const ManajemenSiswa = ()  =>{
             let q;
             if (selectedKelas) {
                 q = query(collection(db, "SISWA"), where('ID_KELAS', "==", selectedKelas));
-                const snap = await getDocs(q);
-                setDaftarSiswa(snap.docs.map(d => ({ id: d.id, ...d.data() })));
             } else {
-                const snap = await getDocs(collection(db, "SISWA"));
-                const semuaSiswa = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-                const idsKelasTahunIni = daftarKelas.map(k => k.id);
+                const kelasTahunIni = daftarKelas
+                    .filter(k => k.TAHUN_AJARAN === selectedTahun)
+                    .map(k => k.id);
+                
+               if (kelasTahunIni.length === 0) {
+                setDaftarSiswa([]);
+                setLoading(false);
+                return;
+               }
 
-                const filteredSiswa = semuaSiswa.filter(s => idsKelasTahunIni.includes(s.ID_KELAS));
-
-                setDaftarSiswa(filteredSiswa);
+               q = query(collection(db, "SISWA"), where('ID_KELAS', 'in', kelasTahunIni));
             }
+
+            const snap = await getDocs(q);
+            setDaftarSiswa(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+
         } catch (err) {
             console.error("Error Fetch Siswa:", err);
         } finally {
             setLoading(false);
         }
-    }, [selectedKelas, daftarKelas]); 
+    }, [selectedKelas, selectedTahun, daftarKelas]); 
 
     const fetchDataModal = async () => {
         try {

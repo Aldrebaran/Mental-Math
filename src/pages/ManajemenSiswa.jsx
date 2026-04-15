@@ -37,21 +37,15 @@ const ManajemenSiswa = ()  =>{
 
     const [listTahunAjaran, setListTahunAjaran] = useState([]);
 
-    const fetchKelas = useCallback (async () => {
+    const fetchKelas = async () => {
         try {
             const querySnapshot = await getDocs(collection(db,"KELAS"));
             const list = querySnapshot.docs.map( d => ({ id: d.id, ...d.data()}));
-            const kelasTahunIni = list.filter(k => k.TAHUN_AJARAN === selectedTahun);
             setDaftarKelas(list);
-
-            if (kelasTahunIni.length === 0) {
-                setDaftarSiswa([]);
-                setSelectedKelas("");
-            }
         } catch (err){
             console.error("Gagal mengambil data kelas", err);
         }
-    }, [selectedTahun]);
+    };
 
     const fetchTahunAjaran = async () => {
         try {
@@ -91,16 +85,16 @@ const ManajemenSiswa = ()  =>{
     }, []);
 
     const fetchSiswa = useCallback(async () => {
-
-        if (!selectedKelas) {
-            setDaftarSiswa([]);
-            return;
-        }
-
         setLoading(true);
         try {
 
-            const q = query(collection(db, "SISWA"), where('ID_KELAS', "==", selectedKelas));
+            let q;
+            if (selectedKelas) {
+                q = query(collection(db, "SISWA"), where('ID_KELAS', "==", selectedKelas)); 
+            } else {
+                q = collection(db, "SISWA");
+            }
+
             const snap = await getDocs(q);
             setDaftarSiswa(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 
@@ -124,7 +118,7 @@ const ManajemenSiswa = ()  =>{
         fetchKelas();
         fetchSiswa();
         fetchTahunAjaran();
-    }, [fetchSiswa, fetchKelas]);
+    }, [fetchSiswa]);
 
     const handleTambahKelas = async () => {
         if (!newKelasName.trim() || !selectedTahun) return;

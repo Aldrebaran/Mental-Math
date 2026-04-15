@@ -142,76 +142,74 @@ const KuisMainContent = ({role}) => {
     });
 
     useEffect(() => {
-        let unsubscribeKuis = null;
+    let unsubscribeKuis = null;
 
-        const fetchKuisSpesifikSiswa = async () => {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
+    const fetchKuisPastiJalan = async () => {
+        try {
+            const user = auth.currentUser;
+            if (!user) return;
 
+            // 1. Ambil SEMUA data siswa dulu
+            const snapSiswa = await getDocs(collection(db, "SISWA"));
             
-                const qSiswa = query(collection(db, "SISWA"), where("uid", "==", user.uid));
-                const snapSiswa = await getDocs(qSiswa);
-            
-                if (snapSiswa.empty) {
-                    console.warn("Data siswa tidak ditemukan di koleksi SISWA");
-                    return;
-                }
+            // 2. Cari secara manual mana dokumen yang punya UID atau EMAIL yang cocok
+            // Kita cek beberapa kemungkinan nama field sekaligus (uid, UID, email, EMAIL)
+            const docSiswa = snapSiswa.docs.find(doc => {
+                const d = doc.data();
+                return d.uid === user.uid || d.UID === user.uid || d.email === user.email || d.EMAIL === user.email;
+            });
 
-                const dataSiswa = snapSiswa.docs[0].data();
-                const idKelasSiswa = dataSiswa.ID_KELAS; 
+            if (!docSiswa) {
+                console.error("Siswa tidak terdaftar di database koleksi SISWA");
+                return;
+            }
 
-           
-                const qKuis = query(
-                    collection(db, "KUIS"),
-                    where("STATUS", "==", "AKTIF"),
-                    where("idKelasTerpilih", "==", idKelasSiswa)
-                );
+            const idKelasSiswa = docSiswa.data().ID_KELAS;
 
-           
-                unsubscribeKuis = onSnapshot(qKuis, (snapshot) => {
-                    const dataKuis = snapshot.docs.map(doc => {
-                        const d = doc.data();
-                        const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
-                        const sekarang = new Date();
-                        const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
+            // 3. Ambil kuis yang statusnya AKTIF
+            const qKuis = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
 
-                        return {
-                            id: doc.id,
-                            ...d,
-                            title: d.JUDUL_KUIS,
-                            durationSeconds: actualRemaining,
-                            totalQuestions: d.LIST_SOAL?.length || 0
-                        };  
-                    });
+            unsubscribeKuis = onSnapshot(qKuis, (snapshot) => {
+                const allKuis = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
 
-                    setLocalQuizzes(dataKuis);
+                // 4. Filter kuis sesuai ID_KELAS siswa
+                const filtered = allKuis.filter(k => k.idKelasTerpilih === idKelasSiswa);
 
-                
-                    setTimeLeft(prev => {
-                        const newTimes = {...prev};
-                        dataKuis.forEach(q => {
-                            newTimes[q.id] = q.durationSeconds;
-                        });
-                        return newTimes;
-                    });
-                }, (error) => {
-                    console.error("Gagal mengambil data kuis:", error);
+                const dataKuis = filtered.map(d => {
+                    const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
+                    const sekarang = new Date();
+                    const remaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
+
+                    return {
+                        id: d.id,
+                        ...d,
+                        title: d.JUDUL_KUIS,
+                        durationSeconds: remaining,
+                        totalQuestions: d.LIST_SOAL?.length || 0
+                    };  
                 });
 
-            } catch (err) {
-                console.error("Error utama pada fetch kuis:", err);
-            }
-        };
+                setLocalQuizzes(dataKuis);
+                
+                setTimeLeft(prev => {
+                    const newTimes = {...prev};
+                    dataKuis.forEach(q => { newTimes[q.id] = q.durationSeconds; });
+                    return newTimes;
+                });
+            });
 
-        fetchKuisSpesifikSiswa();
+        } catch (err) {
+            console.error("Error Final Fetch:", err);
+        }
+    };
 
+    fetchKuisPastiJalan();
+    return () => { if (unsubscribeKuis) unsubscribeKuis(); };
+}, []);
     
-        return () => {
-            if (unsubscribeKuis) unsubscribeKuis();
-        };
-    }, []);
-
     useEffect(() => {
     const fetchStats = async () => {
         const user = auth.currentUser;

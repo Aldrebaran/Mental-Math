@@ -99,8 +99,7 @@ const ManajemenSiswa = ()  =>{
 
         setLoading(true);
         try {
-            
-            
+
             const q = query(collection(db, "SISWA"), where('ID_KELAS', "==", selectedKelas));
             const snap = await getDocs(q);
             setDaftarSiswa(snap.docs.map(d => ({ id: d.id, ...d.data() })));

@@ -171,12 +171,16 @@ const ManajemenSiswa = ()  =>{
 
         try {
             for (const tahun of selectedTahunIds) {
+
+                await deleteDoc(doc(db, "TAHUN_AJARAN", tahun));
+
                 const kelasSesuaiTahun = daftarKelas.filter(k => k.TAHUN_AJARAN === tahun);
                 for (const k of kelasSesuaiTahun) {
                     await deleteDoc(doc(db, "KELAS", k.id));
                 }
             }
 
+            await fetchTahunAjaran();
             setSelectedTahunIds([]);
             fetchKelas();
             alert("Data Tahun Ajaran berhasil dihapus!");

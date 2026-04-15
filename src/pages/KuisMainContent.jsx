@@ -142,74 +142,43 @@ const KuisMainContent = ({role}) => {
     });
 
     useEffect(() => {
-    let unsubscribeKuis = null;
+        const q = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
 
-    const fetchKuisPastiJalan = async () => {
-        try {
-            const user = auth.currentUser;
-            if (!user) return;
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const dataKuis = snapshot.docs.map(doc => {
 
-            // 1. Ambil SEMUA data siswa dulu
-            const snapSiswa = await getDocs(collection(db, "SISWA"));
-            
-            // 2. Cari secara manual mana dokumen yang punya UID atau EMAIL yang cocok
-            // Kita cek beberapa kemungkinan nama field sekaligus (uid, UID, email, EMAIL)
-            const docSiswa = snapSiswa.docs.find(doc => {
                 const d = doc.data();
-                return d.uid === user.uid || d.UID === user.uid || d.email === user.email || d.EMAIL === user.email;
-            });
 
-            if (!docSiswa) {
-                console.error("Siswa tidak terdaftar di database koleksi SISWA");
-                return;
-            }
+                const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
+                const sekarang = new Date();
 
-            const idKelasSiswa = docSiswa.data().ID_KELAS;
+                const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
 
-            // 3. Ambil kuis yang statusnya AKTIF
-            const qKuis = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
-
-            unsubscribeKuis = onSnapshot(qKuis, (snapshot) => {
-                const allKuis = snapshot.docs.map(doc => ({
+                return {
                     id: doc.id,
-                    ...doc.data()
-                }));
-
-                // 4. Filter kuis sesuai ID_KELAS siswa
-                const filtered = allKuis.filter(k => k.idKelasTerpilih === idKelasSiswa);
-
-                const dataKuis = filtered.map(d => {
-                    const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
-                    const sekarang = new Date();
-                    const remaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
-
-                    return {
-                        id: d.id,
-                        ...d,
-                        title: d.JUDUL_KUIS,
-                        durationSeconds: remaining,
-                        totalQuestions: d.LIST_SOAL?.length || 0
-                    };  
-                });
-
-                setLocalQuizzes(dataKuis);
-                
-                setTimeLeft(prev => {
-                    const newTimes = {...prev};
-                    dataKuis.forEach(q => { newTimes[q.id] = q.durationSeconds; });
-                    return newTimes;
-                });
+                    ...d,
+                    title: d.JUDUL_KUIS,
+                    durationSeconds: actualRemaining,
+                    totalQuestions: d.LIST_SOAL?.length || 0
+                };  
             });
 
-        } catch (err) {
-            console.error("Error Final Fetch:", err);
-        }
-    };
+            setLocalQuizzes(dataKuis);
 
-    fetchKuisPastiJalan();
-    return () => { if (unsubscribeKuis) unsubscribeKuis(); };
-}, []);
-    
+            setTimeLeft(prev => {
+                const newTimes = {...prev};
+                dataKuis.forEach(q => {
+                    newTimes[q.id] = q.durationSeconds;
+                });
+                return newTimes;
+            });
+        }, (error) => {
+            console.error("Gagal mengambil data kuis:", error);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     useEffect(() => {
     const fetchStats = async () => {
         const user = auth.currentUser;
@@ -246,6 +215,8 @@ const KuisMainContent = ({role}) => {
 
     fetchStats();
 }, [role]); 
+
+
 
     useEffect(() => {
         const timer = setInterval(() => {

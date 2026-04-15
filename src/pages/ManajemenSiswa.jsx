@@ -534,7 +534,7 @@ const ManajemenSiswa = ()  =>{
                                                     >
                                                         <option value="">ASAL: SEMUA</option>
                                                         {daftarKelas.map(k => (
-                                                            <option key={k.id} value={k.NAMA_KELAS}>{k.NAMA_KELAS}</option>
+                                                            <option key={k.id} value={k.id}>{k.NAMA_KELAS}</option>
                                                         ))}
                                                     </select>
                                                 </div>
@@ -544,7 +544,7 @@ const ManajemenSiswa = ()  =>{
                                                 {dataSiswaModal
                                                     .filter(s => {
                                                         const mSearch = s.NAMA_SISWA?.toLowerCase().includes(searchTerm.toLowerCase());
-                                                        const mKelas = filterKelasSiswa ? s.ID_KELAS === filterKelasSiswa : true;
+                                                        const mKelas = filterKelasSiswa ? (s.ID_KELAS === filterKelasSiswa || s.KELAS === filterKelasSiswa) : true;
                                                         return mSearch && mKelas;
                                                     })
                                                     .map(s => (
@@ -554,7 +554,7 @@ const ManajemenSiswa = ()  =>{
                                                             className={`border-2 border-black rounded-xl p-2 px-3 flex justify-between items-center cursor-pointer transition-all active:scale-[0.98] ${selectedSiswaIds.includes(s.id) ? 'bg-yellow-100 translate-x-1' : 'bg-white'}`}
                                                         >
                                                             <div className="flex flex-col">
-                                                                <span className="text-[6px] font-black opacity-40 uppercase leading-none">{s.KELAS}</span>
+                                                                <span className="text-[6px] font-black opacity-40 uppercase leading-none">{daftarKelas.find(k => k.id === (s.ID_KELAS || s.KELAS))?.NAMA_KELAS || "Tanpa Kelas"}</span>
                                                                 <span className="text-[10px] font-black uppercase">{s.NAMA_SISWA}</span>
                                                             </div>
                                                             <div className={`w-4 h-4 rounded border-2 border-black flex items-center justify-center ${selectedSiswaIds.includes(s.id) ? 'bg-[#2ECC71]' : 'bg-white'}`}>

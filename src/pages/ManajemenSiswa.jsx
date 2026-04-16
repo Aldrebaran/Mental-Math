@@ -309,7 +309,7 @@ const ManajemenSiswa = ()  =>{
                         </div>
                     </div>
 
-                    <div className="divide-y-2 divide-black/5 min-h-62.5 md:min-h-75 bg-[#C4B7B7] flex flex-col">
+                    <div className="divide-y-2 divide-black/5 max-h-75 md:max-h-100 overflow-y-auto bg-[#C4B7B7] flex flex-col scrollbar-thin scrollbar-thumb-black/20">
                         {loading ? (
                             <div className="m-auto font-bold animate-pulse text-blue-600 uppercase text-xs">Mengambil Data...</div>
                         ) : daftarSiswa.length > 0 ? (

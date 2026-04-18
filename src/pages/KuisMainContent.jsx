@@ -141,53 +141,51 @@ const KuisMainContent = ({role}) => {
         return sekarang < finish;
     });
 
-    useEffect(() => {
+   useEffect(() => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const fetchKelasSiswa = async () => {
-        const snapSiswa = await getDocs(query(collection(db, "SISWA"), where("uid", "==", user.uid)));
-        if (snapSiswa.empty) return;
-        
-        const idKelasSiswa = snapSiswa.docs[0].data().ID_KELAS;
+    const loadData = async () => {
+        try {
+           
+            const qSiswa = query(collection(db, "SISWA"), where("uid", "==", user.uid));
+            const snapSiswa = await getDocs(qSiswa);
 
-        const q = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
+            if (snapSiswa.empty) {
+                console.log("Data siswa tidak ditemukan!");
+                return;
+            }
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const dataKuis = snapshot.docs
-                .map(doc => {
-                    const d = doc.data();
-                    const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
-                    const sekarang = new Date();
-                    const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
+            const idKelasSiswa = snapSiswa.docs[0].data().ID_KELAS;
+            console.log("ID Kelas Siswa yang login:", idKelasSiswa); // CEK DI CONSOLE
 
-                    return {
-                        id: doc.id,
-                        ...d,
-                        title: d.JUDUL_KUIS,
-                        durationSeconds: actualRemaining,
-                        totalQuestions: d.LIST_SOAL?.length || 0
-                    };
-                })
-                .filter(kuis => kuis.idKelasTerpilih === idKelasSiswa); 
+            const qKuis = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
 
-            setLocalQuizzes(dataKuis);
+            const unsubscribe = onSnapshot(qKuis, (snapshot) => {
+                const dataKuis = snapshot.docs
+                    .map(doc => {
+                        const d = doc.data();
+                        return {
+                            id: doc.id,
+                            ...d,
+                            title: d.JUDUL_KUIS,
+                            durationSeconds: Math.max(0, Math.floor(((d.WAKTU_SELESAI?.toDate() || new Date()) - new Date()) / 1000)),
+                            totalQuestions: d.LIST_SOAL?.length || 0
+                        };
+                    })
+                    .filter(kuis => kuis.idKelasTerpilih === idKelasSiswa);
 
-            setTimeLeft(prev => {
-                const newTimes = {...prev};
-                dataKuis.forEach(q => {
-                    newTimes[q.id] = q.durationSeconds;
-                });
-                return newTimes;
+                console.log("Kuis yang lolos filter:", dataKuis); // CEK APAKAH KUIS MASUK KE SINI
+                setLocalQuizzes(dataKuis);
             });
-        }, (error) => {
-            console.error("Gagal mengambil data kuis:", error);
-        });
 
-        return () => unsubscribe();
+            return unsubscribe;
+        } catch (error) {
+            console.error("Error saat load data:", error);
+        }
     };
 
-    fetchKelasSiswa();
+    loadData();
 }, []);
 
     useEffect(() => {

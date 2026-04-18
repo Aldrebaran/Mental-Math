@@ -159,7 +159,7 @@ const KuisMainContent = ({role}) => {
         console.log("DEBUG: Jumlah kuis aktif ditemukan:", dataKuis.length);
         console.log("DEBUG: Role yang diterima:", role);
 
-        if (role === "guru") {
+        if (role === "GURU") {
             console.log("DEBUG: Mode GURU aktif, menampilkan semua kuis");
             setLocalQuizzes(dataKuis);
             return;

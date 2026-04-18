@@ -143,50 +143,48 @@ const KuisMainContent = ({role}) => {
 
   useEffect(() => {
     const user = auth.currentUser;
-    if (!user || !user.email) return;
+    if (!user) return;
 
     const loadData = async () => {
         try {
-            const qSiswa = query(collection(db, "SISWA"), where("email", "==", user.email));
-            const snapSiswa = await getDocs(qSiswa);
-
-            if (snapSiswa.empty) {
-                console.warn("Siswa dengan email", user.email, "tidak ditemukan di koleksi SISWA");
-                return;
-            }
-
-            const siswaData = snapSiswa.docs[0].data();
-            const idKelasSiswa = siswaData.ID_KELAS;
-            console.log("Siswa terdeteksi, ID Kelas:", idKelasSiswa);
-
             const qKuis = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
 
-            const unsubscribe = onSnapshot(qKuis, (snapshot) => {
-                const dataKuis = snapshot.docs
-                    .map(doc => {
-                        const d = doc.data();
-                        return {
-                            id: doc.id,
-                            ...d,
-                            title: d.JUDUL_KUIS,
-                            durationSeconds: Math.max(0, Math.floor(((d.WAKTU_SELESAI?.toDate() || new Date()) - new Date()) / 1000)),
-                            totalQuestions: d.LIST_SOAL?.length || 0
-                        };
-                    })
-                    .filter(kuis => String(kuis.idKelasTerpilih) === String(idKelasSiswa));
+            const unsubscribe = onSnapshot(qKuis, async (snapshot) => {
+                let dataKuis = snapshot.docs.map(doc => {
+                    const d = doc.data();
+                    return {
+                        id: doc.id,
+                        ...d,
+                        title: d.JUDUL_KUIS,
+                        durationSeconds: Math.max(0, Math.floor(((d.WAKTU_SELESAI?.toDate() || new Date()) - new Date()) / 1000)),
+                        totalQuestions: d.LIST_SOAL?.length || 0
+                    };
+                });
 
-                console.log("Jumlah kuis yang tampil untuk kelas ini:", dataKuis.length);
+                if (role !== "guru") {
+                    const qSiswa = query(collection(db, "SISWA"), where("email", "==", user.email));
+                    const snapSiswa = await getDocs(qSiswa);
+                    
+                    if (!snapSiswa.empty) {
+                        const idKelasSiswa = snapSiswa.docs[0].data().ID_KELAS;
+                        dataKuis = dataKuis.filter(kuis => String(kuis.idKelasTerpilih) === String(idKelasSiswa));
+                    } else {
+                        dataKuis = [];
+                    }
+                }
+                
+
                 setLocalQuizzes(dataKuis);
             });
 
-            return () => unsubscribe();
+            return unsubscribe;
         } catch (error) {
             console.error("Gagal memproses data:", error);
         }
     };
 
     loadData();
-}, []);
+}, [role]);
 
     useEffect(() => {
     const fetchStats = async () => {

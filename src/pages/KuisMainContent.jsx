@@ -145,46 +145,41 @@ const KuisMainContent = ({role}) => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const loadData = async () => {
-        try {
-            const qKuis = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
+    const qKuis = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
 
-            const unsubscribe = onSnapshot(qKuis, async (snapshot) => {
-                let dataKuis = snapshot.docs.map(doc => {
-                    const d = doc.data();
-                    return {
-                        id: doc.id,
-                        ...d,
-                        title: d.JUDUL_KUIS,
-                        durationSeconds: Math.max(0, Math.floor(((d.WAKTU_SELESAI?.toDate() || new Date()) - new Date()) / 1000)),
-                        totalQuestions: d.LIST_SOAL?.length || 0
-                    };
-                });
+    const unsubscribe = onSnapshot(qKuis, async (snapshot) => {
+        let dataKuis = snapshot.docs.map(doc => {
+            const d = doc.data();
+            return {
+                id: doc.id,
+                ...d,
+                title: d.JUDUL_KUIS,
+                durationSeconds: Math.max(0, Math.floor(((d.WAKTU_SELESAI?.toDate() || new Date()) - new Date()) / 1000)),
+                totalQuestions: d.LIST_SOAL?.length || 0
+            };
+        });
 
-                if (role !== "guru") {
-                    const qSiswa = query(collection(db, "SISWA"), where("email", "==", user.email));
-                    const snapSiswa = await getDocs(qSiswa);
-                    
-                    if (!snapSiswa.empty) {
-                        const idKelasSiswa = snapSiswa.docs[0].data().ID_KELAS;
-                        dataKuis = dataKuis.filter(kuis => String(kuis.idKelasTerpilih) === String(idKelasSiswa));
-                    } else {
-                        dataKuis = [];
-                    }
-                }
+        if (role !== "guru") {
+            try {
+                const qSiswa = query(collection(db, "SISWA"), where("email", "==", user.email));
+                const snapSiswa = await getDocs(qSiswa);
                 
-
-                setLocalQuizzes(dataKuis);
-            });
-
-            return unsubscribe;
-        } catch (error) {
-            console.error("Gagal memproses data:", error);
+                if (!snapSiswa.empty) {
+                    const idKelasSiswa = snapSiswa.docs[0].data().ID_KELAS;
+                    dataKuis = dataKuis.filter(kuis => String(kuis.idKelasTerpilih) === String(idKelasSiswa));
+                } else {
+                    dataKuis = [];
+                }
+            } catch (err) {
+                console.error("Gagal memfilter kelas siswa:", err);
+            }
         }
-    };
+        
+        setLocalQuizzes(dataKuis);
+    });
 
-    loadData();
-}, [role]);
+    return () => unsubscribe();
+}, [role]); 
 
     useEffect(() => {
     const fetchStats = async () => {

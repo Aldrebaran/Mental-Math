@@ -145,7 +145,7 @@ const KuisMainContent = ({role}) => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const qKuis = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
+    const qKuis = query(collection(db, "KUIS"));
 
     const unsubscribe = onSnapshot(qKuis, async (snapshot) => {
         let dataKuis = snapshot.docs.map(doc => ({

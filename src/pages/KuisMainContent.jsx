@@ -141,23 +141,23 @@ const KuisMainContent = ({role}) => {
         return sekarang < finish;
     });
 
-   useEffect(() => {
+  useEffect(() => {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user || !user.email) return;
 
     const loadData = async () => {
         try {
-           
-            const qSiswa = query(collection(db, "SISWA"), where("uid", "==", user.uid));
+            const qSiswa = query(collection(db, "SISWA"), where("email", "==", user.email));
             const snapSiswa = await getDocs(qSiswa);
 
             if (snapSiswa.empty) {
-                console.log("Data siswa tidak ditemukan!");
+                console.warn("Siswa dengan email", user.email, "tidak ditemukan di koleksi SISWA");
                 return;
             }
 
-            const idKelasSiswa = snapSiswa.docs[0].data().ID_KELAS;
-            console.log("ID Kelas Siswa yang login:", idKelasSiswa); // CEK DI CONSOLE
+            const siswaData = snapSiswa.docs[0].data();
+            const idKelasSiswa = siswaData.ID_KELAS;
+            console.log("Siswa terdeteksi, ID Kelas:", idKelasSiswa);
 
             const qKuis = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
 
@@ -173,15 +173,15 @@ const KuisMainContent = ({role}) => {
                             totalQuestions: d.LIST_SOAL?.length || 0
                         };
                     })
-                    .filter(kuis => kuis.idKelasTerpilih === idKelasSiswa);
+                    .filter(kuis => String(kuis.idKelasTerpilih) === String(idKelasSiswa));
 
-                console.log("Kuis yang lolos filter:", dataKuis); // CEK APAKAH KUIS MASUK KE SINI
+                console.log("Jumlah kuis yang tampil untuk kelas ini:", dataKuis.length);
                 setLocalQuizzes(dataKuis);
             });
 
-            return unsubscribe;
+            return () => unsubscribe();
         } catch (error) {
-            console.error("Error saat load data:", error);
+            console.error("Gagal memproses data:", error);
         }
     };
 

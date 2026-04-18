@@ -142,26 +142,34 @@ const KuisMainContent = ({role}) => {
     });
 
     useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const fetchKelasSiswa = async () => {
+        const snapSiswa = await getDocs(query(collection(db, "SISWA"), where("uid", "==", user.uid)));
+        if (snapSiswa.empty) return;
+        
+        const idKelasSiswa = snapSiswa.docs[0].data().ID_KELAS;
+
         const q = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const dataKuis = snapshot.docs.map(doc => {
+            const dataKuis = snapshot.docs
+                .map(doc => {
+                    const d = doc.data();
+                    const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
+                    const sekarang = new Date();
+                    const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
 
-                const d = doc.data();
-
-                const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
-                const sekarang = new Date();
-
-                const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
-
-                return {
-                    id: doc.id,
-                    ...d,
-                    title: d.JUDUL_KUIS,
-                    durationSeconds: actualRemaining,
-                    totalQuestions: d.LIST_SOAL?.length || 0
-                };  
-            });
+                    return {
+                        id: doc.id,
+                        ...d,
+                        title: d.JUDUL_KUIS,
+                        durationSeconds: actualRemaining,
+                        totalQuestions: d.LIST_SOAL?.length || 0
+                    };
+                })
+                .filter(kuis => kuis.idKelasTerpilih === idKelasSiswa); 
 
             setLocalQuizzes(dataKuis);
 
@@ -177,7 +185,10 @@ const KuisMainContent = ({role}) => {
         });
 
         return () => unsubscribe();
-    }, []);
+    };
+
+    fetchKelasSiswa();
+}, []);
 
     useEffect(() => {
     const fetchStats = async () => {
@@ -215,8 +226,6 @@ const KuisMainContent = ({role}) => {
 
     fetchStats();
 }, [role]); 
-
-
 
     useEffect(() => {
         const timer = setInterval(() => {

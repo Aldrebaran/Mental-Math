@@ -141,51 +141,43 @@ const KuisMainContent = ({role}) => {
         return sekarang < finish;
     });
 
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    useEffect(() => {
+        const q = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
 
-    const qKuis = query(collection(db, "KUIS"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const dataKuis = snapshot.docs.map(doc => {
 
-    const unsubscribe = onSnapshot(qKuis, async (snapshot) => {
-        let dataKuis = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            title: doc.data().JUDUL_KUIS,
-            durationSeconds: Math.max(0, Math.floor(((doc.data().WAKTU_SELESAI?.toDate() || new Date()) - new Date()) / 1000)),
-            totalQuestions: doc.data().LIST_SOAL?.length || 0
-        }));
+                const d = doc.data();
 
-        console.log("DEBUG: Jumlah kuis aktif ditemukan:", dataKuis.length);
-        console.log("DEBUG: Role yang diterima:", role);
+                const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
+                const sekarang = new Date();
 
-        if (role === "GURU") {
-            console.log("DEBUG: Mode GURU aktif, menampilkan semua kuis");
+                const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
+
+                return {
+                    id: doc.id,
+                    ...d,
+                    title: d.JUDUL_KUIS,
+                    durationSeconds: actualRemaining,
+                    totalQuestions: d.LIST_SOAL?.length || 0
+                };  
+            });
+
             setLocalQuizzes(dataKuis);
-            return;
-        }
 
-        try {
-            const qSiswa = query(collection(db, "SISWA"), where("email", "==", user.email));
-            const snapSiswa = await getDocs(qSiswa);
-            
-            if (!snapSiswa.empty) {
-                const idKelasSiswa = snapSiswa.docs[0].data().ID_KELAS;
-                console.log("DEBUG: Mode SISWA aktif, filter kelas:", idKelasSiswa);
-                
-                const kuisTerfilter = dataKuis.filter(k => String(k.idKelasTerpilih) === String(idKelasSiswa));
-                setLocalQuizzes(kuisTerfilter);
-            } else {
-                console.log("DEBUG: Siswa tidak ditemukan di DB");
-                setLocalQuizzes([]);
-            }
-        } catch (err) {
-            console.error("DEBUG: Error filter:", err);
-        }
-    });
+            setTimeLeft(prev => {
+                const newTimes = {...prev};
+                dataKuis.forEach(q => {
+                    newTimes[q.id] = q.durationSeconds;
+                });
+                return newTimes;
+            });
+        }, (error) => {
+            console.error("Gagal mengambil data kuis:", error);
+        });
 
-    return () => unsubscribe();
-}, [role]);
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
     const fetchStats = async () => {
@@ -223,6 +215,8 @@ const KuisMainContent = ({role}) => {
 
     fetchStats();
 }, [role]); 
+
+
 
     useEffect(() => {
         const timer = setInterval(() => {

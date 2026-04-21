@@ -1,6 +1,7 @@
 import { auth, db } from "../lib/Firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import bcrypt from "bcryptjs";
 
 const KODE_GURU = "GURUTHERESIAN";
 const KODE_SISWA = "SISWATHERESIAN";
@@ -23,13 +24,15 @@ export const registerUser = async (role, userData) =>
 
         const{user} = await createUserWithEmailAndPassword(auth, email, password);
 
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         if(role == 'GURU'){
 
             await setDoc(doc(db, "GURU", user.uid), {
 
                 NAMA_GURU: nama,
                 EMAIL: email,
-                PASSWORD: password,
+                PASSWORD: hashedPassword,
                 KODE_REGISTRASI: kodeinput
 
             });
@@ -42,7 +45,7 @@ export const registerUser = async (role, userData) =>
 
                 NAMA_SISWA: nama,
                 EMAIL: email,
-                PASSWORD: password,
+                PASSWORD: hashedPassword,
                 ID_KELAS: ID_KELAS,
                 KODE_REGISTRASI: kodeinput
 

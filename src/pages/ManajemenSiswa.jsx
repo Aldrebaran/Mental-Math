@@ -635,9 +635,8 @@ useEffect(() => {
                                                             onChange={(e) => setSearchSiswaHapus(e.target.value)}
                                                         />
                                                         <Search size={14}/>
+                                                        
                                                     </div>
-
-                                                        {selectedHapusKelas && (
                                                             <button 
                                                                 onClick={() => handleSelectAll()}
                                                                 className="text-[9px] font-black underline uppercase text-white hover:text-yellow-300 transition-colors shrink-0"
@@ -646,7 +645,6 @@ useEffect(() => {
                                                                     ? "Batal Semua" : "Pilih Semua"
                                                                 }
                                                             </button>
-                                                        )}                                                 
                                                     </div>
                                                 
                                                 <div className="h-48 overflow-y-auto p-3 space-y-1.5 bg-[#3498DB] scrollbar-hide">

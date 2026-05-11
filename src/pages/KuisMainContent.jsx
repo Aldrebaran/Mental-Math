@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../lib/Firebase";
-import { collection, getDocs, getDoc, doc, addDoc, serverTimestamp, onSnapshot, query, where, orderBy} from "firebase/firestore";
+import { collection, getDocs, getDoc, doc, addDoc, serverTimestamp, onSnapshot, query, where} from "firebase/firestore";
 import QuizRoom from "../components/QuizRoom";
 
 const KuisMainContent = ({role}) => {
@@ -165,8 +165,7 @@ const KuisMainContent = ({role}) => {
                 }
             } else {
                 const q = query(
-                    collection(db, "KUIS"), 
-                    orderBy("CREATED_AT", "desc")
+                    collection(db, "KUIS")
                 );
                 
                 unsubscribe = onSnapshot(q, (snapshot) => {

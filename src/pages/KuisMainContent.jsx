@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../lib/Firebase";
-import { collection, getDocs, addDoc, serverTimestamp, onSnapshot, query, where } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, addDoc, serverTimestamp, onSnapshot, query, where } from "firebase/firestore";
 import QuizRoom from "../components/QuizRoom";
 
 const KuisMainContent = ({role}) => {
@@ -142,42 +142,67 @@ const KuisMainContent = ({role}) => {
     });
 
     useEffect(() => {
-        const q = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
+    const fetchKuisSiswa = async () => {
+        const user = auth.currentUser;
+        if (!user) return;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const dataKuis = snapshot.docs.map(doc => {
+        try {
+            const userDoc = await getDoc(doc(db, "SISWA", user.uid));
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data(); 
 
-                const d = doc.data();
+                const q = query(
+                    collection(db, "KUIS"),
+                    where("STATUS", "==", "AKTIF"),
+                    where("ID_KELAS", "==", userData.ID_KELAS)
+                );
 
-                const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
-                const sekarang = new Date();
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const dataKuis = snapshot.docs.map(doc => {
+                        const d = doc.data();
+                        const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
+                        const sekarang = new Date();
+                        const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
 
-                const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
+                        return {
+                            id: doc.id,
+                            ...d,
+                            title: d.JUDUL_KUIS,
+                            durationSeconds: actualRemaining,
+                            totalQuestions: d.LIST_SOAL?.length || 0 
+                        };  
+                    });
 
-                return {
-                    id: doc.id,
-                    ...d,
-                    title: d.JUDUL_KUIS,
-                    durationSeconds: actualRemaining,
-                    totalQuestions: d.LIST_SOAL?.length || 0
-                };  
-            });
+                    setLocalQuizzes(dataKuis);
 
-            setLocalQuizzes(dataKuis);
-
-            setTimeLeft(prev => {
-                const newTimes = {...prev};
-                dataKuis.forEach(q => {
-                    newTimes[q.id] = q.durationSeconds;
+                    setTimeLeft(prev => {
+                        const newTimes = {...prev};
+                        dataKuis.forEach(q => {
+                            newTimes[q.id] = q.durationSeconds;
+                        });
+                        return newTimes;
+                    });
+                }, (error) => {
+                    console.error("Gagal mengambil data kuis:", error);
                 });
-                return newTimes;
-            });
-        }, (error) => {
-            console.error("Gagal mengambil data kuis:", error);
-        });
 
-        return () => unsubscribe();
-    }, []);
+                return unsubscribe;
+            }
+        } catch (error) {
+            console.error("Error pada proses pengambilan kuis:", error);
+        }
+    };
+
+
+    if (role === "SISWA") {
+        const unsubPromise = fetchKuisSiswa();
+
+        return () => {
+            unsubPromise.then(unsub => unsub && unsub());
+        };
+    }
+}, [role]); 
 
     useEffect(() => {
     const fetchStats = async () => {

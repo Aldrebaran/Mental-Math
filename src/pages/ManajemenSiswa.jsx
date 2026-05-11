@@ -797,9 +797,20 @@ useEffect(() => {
                                             )} 
                                         </div>
                                         
-                                        
                                         <div className="bg-[#3498DB] border-4 border-black rounded-2xl overflow-hidden shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
                                             <div className="p-3 bg-white/10 border-b-4 border-black">
+                                            
+                                                <div className="flex justify-between items-center mb-2 px-1">
+                                                    <span className="text-[10px] font-black uppercase text-white">Daftar Kelas</span>
+                                                    <button 
+                                                        onClick={() => handleSelectAll()}
+                                                        className="text-[9px] font-black underline uppercase text-white hover:text-yellow-300 shrink-0"
+                                                    >
+                                                        {selectedKelasIds.length > 0 && selectedKelasIds.length === daftarKelas.filter(k => k.NAMA_KELAS?.toLowerCase().includes(searchTerm.toLowerCase())).length 
+                                                            ? "Batal Semua" : "Pilih Semua"}
+                                                    </button>
+                                                </div>
+
                                                 <div className="bg-white rounded-xl flex items-center px-3 py-1.5 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                                     <input
                                                         type="text" placeholder="CARI KELAS..." className="w-full text-[10px] font-bold outline-none"

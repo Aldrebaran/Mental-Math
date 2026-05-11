@@ -635,7 +635,7 @@ useEffect(() => {
                                                             onChange={(e) => setSearchSiswaHapus(e.target.value)}
                                                         />
                                                         <Search size={14}/>
-                                                        
+
                                                     </div>
                                                             <button 
                                                                 onClick={() => handleSelectAll()}
@@ -732,6 +732,18 @@ useEffect(() => {
                                                     />
                                                     <Search size={14} className="text-gray-400"/>
                                                 </div>
+
+                                                <button 
+                                                    onClick={() => handleSelectAll()}
+                                                    type="button"
+                                                    className="text-[9px] font-black underline uppercase text-white hover:text-yellow-300 transition-colors shrink-0"
+                                                >
+                                                    {selectedTahunIds.length > 0 && selectedTahunIds.length === listTahunAjaran.filter(t => 
+                                                        t.TAHUN?.toLowerCase().includes(searchTahun.toLowerCase())
+                                                    ).length 
+                                                        ? "Batal" : "Semua"
+                                                    }
+                                                </button>
                                             </div>
 
                                             <div className="h-44 overflow-y-auto p-3 space-y-2 bg-[#3498DB]">

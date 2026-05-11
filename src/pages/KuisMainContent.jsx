@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../lib/Firebase";
-import { collection, getDocs, getDoc, doc, addDoc, serverTimestamp, onSnapshot, query, where } from "firebase/firestore";
+import { collection, getDocs, getDoc, doc, addDoc, serverTimestamp, onSnapshot, query, where, orderBy} from "firebase/firestore";
 import QuizRoom from "../components/QuizRoom";
 
 const KuisMainContent = ({role}) => {
@@ -142,66 +142,72 @@ const KuisMainContent = ({role}) => {
     });
 
     useEffect(() => {
-    const fetchKuisSiswa = async () => {
+    let unsubscribe; 
+
+    const fetchKuis = async () => {
         const user = auth.currentUser;
         if (!user) return;
 
         try {
-            const userDoc = await getDoc(doc(db, "SISWA", user.uid));
-            
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-
+            if (role === "SISWA") {
+                const userDoc = await getDoc(doc(db, "SISWA", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const q = query(
+                        collection(db, "KUIS"),
+                        where("STATUS", "==", "AKTIF"),
+                        where("ID_KELAS", "==", userData.ID_KELAS)
+                    );
+                    
+                    unsubscribe = onSnapshot(q, (snapshot) => {
+                        handleSnapshot(snapshot);
+                    });
+                }
+            } else {
                 const q = query(
-                    collection(db, "KUIS"),
-                    where("STATUS", "==", "AKTIF"),
-                    where("ID_KELAS", "==", userData.ID_KELAS)
+                    collection(db, "KUIS"), 
+                    orderBy("CREATED_AT", "desc")
                 );
-
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const dataKuis = snapshot.docs.map(doc => {
-                        const d = doc.data();
-                        const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
-                        const sekarang = new Date();
-                        const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
-
-                        return {
-                            id: doc.id,
-                            ...d,
-                            title: d.JUDUL, 
-                            durationSeconds: actualRemaining,
-                            totalQuestions: d.LIST_SOAL?.length || 0 
-                        };  
-                    });
-
-                    setLocalQuizzes(dataKuis);
-
-                    setTimeLeft(prev => {
-                        const newTimes = {...prev};
-                        dataKuis.forEach(q => {
-                            newTimes[q.id] = q.durationSeconds;
-                        });
-                        return newTimes;
-                    });
-                }, (error) => {
-                    console.error("Gagal mengambil data kuis:", error);
+                
+                unsubscribe = onSnapshot(q, (snapshot) => {
+                    handleSnapshot(snapshot);
                 });
-
-                return unsubscribe;
             }
         } catch (error) {
-            console.error("Error pada proses pengambilan kuis:", error);
+            console.error("Error pengambilan kuis:", error);
         }
     };
 
-    if (role === "SISWA") {
-        const unsubPromise = fetchKuisSiswa();
+    const handleSnapshot = (snapshot) => {
+        const dataKuis = snapshot.docs.map(doc => {
+            const d = doc.data();
+            const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
+            const sekarang = new Date();
+            const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
 
-        return () => {
-            unsubPromise.then(unsub => unsub && unsub());
-        };
-    }
-}, [role]); 
+            return {
+                id: doc.id,
+                ...d,
+                title: d.JUDUL,
+                durationSeconds: actualRemaining,
+                totalQuestions: d.LIST_SOAL?.length || 0
+            };
+        });
+
+        setLocalQuizzes(dataKuis);
+        setTimeLeft(prev => {
+            const newTimes = { ...prev };
+            dataKuis.forEach(q => { newTimes[q.id] = q.durationSeconds; });
+            return newTimes;
+        });
+    };
+
+    fetchKuis();
+
+    return () => {
+        if (unsubscribe) unsubscribe();
+    };
+}, [role]);
 
     useEffect(() => {
     const fetchStats = async () => {

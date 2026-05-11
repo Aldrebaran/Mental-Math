@@ -275,19 +275,6 @@ useEffect(() => {
         }
     };
 
-    const toggleSelectAllSiswaHapus = () => {
-        const filteredSiswa = dataSiswaModal.filter(s =>
-            s.KELAS === selectedHapusKelas && 
-            (s.NAMA_SISWA || "").toString().toLowerCase().includes((searchSiswaHapus || "").toString().toLowerCase())
-        );
-
-        if (selectedSiswaHapus.length === filteredSiswa.length && filteredSiswa.length > 0) {
-            setSelectedSiswaHapus([]);
-        } else {
-            setSelectedSiswaHapus(filteredSiswa.map(s => s.id));
-        }
-    };
-
     const handleSelectAll = () => {
     let dataTampil = [];
 
@@ -652,7 +639,7 @@ useEffect(() => {
 
                                                         {selectedHapusKelas && (
                                                             <button 
-                                                                onClick={toggleSelectAllSiswaHapus}
+                                                                onClick={() => handleSelectAll}
                                                                 className="text-[9px] font-black underline uppercase text-white hover:text-yellow-300 transition-colors"
                                                             >
                                                                 {selectedSiswaHapus.length > 0 && selectedSiswaHapus.length === daftarSiswa.filter(s => selectedHapusKelas && s.NAMA_SISWA?.toLowerCase().includes(searchSiswaHapus.toLowerCase())).length

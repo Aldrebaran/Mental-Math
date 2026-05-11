@@ -7,7 +7,7 @@ const RiwayatNilai = () => {
     const [loading, setLoading] = useState(true);
     const [semuaHasil, setSemuaHasil] = useState([]);
     const [filterKuis, setFilterKuis] = useState("Semua");
-    const [searchTerm, setSearchTerm] = useState(""); // State pencarian nama
+    const [searchTerm, setSearchTerm] = useState(""); // Tambahan untuk fitur pencarian
     const [daftarKuis, setDaftarKuis] = useState([]);
 
     useEffect(() => {
@@ -55,8 +55,8 @@ const RiwayatNilai = () => {
     if (loading) return <div className="flex justify-center items-center h-screen font-bold text-white uppercase tracking-widest">Memuat Data...</div>;
 
     return (
-        /* KUNCI PERBAIKAN: pt-32 di mobile dan pt-16 di desktop agar tidak terpotong navbar */
-        <div className="min-h-screen bg-[#B2A4D4] p-4 pt-32 md:pt-16 md:p-8 font-sans w-full">
+        /* PERBAIKAN UTAMA: pt-24 memastikan konten tidak tertutup navbar atas, pb-20 agar tidak mepet bawah */
+        <div className="min-h-screen bg-[#B2A4D4] p-4 pt-24 pb-20 md:pt-12 md:pb-12 md:p-8 font-sans w-full">
             <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-lg overflow-hidden">
                 
                 {/* Header Asli Minimalis */}
@@ -70,13 +70,13 @@ const RiwayatNilai = () => {
 
                     {role === "GURU" && (
                         <div className="flex flex-col md:flex-row gap-4">
-                            {/* Input Cari Nama Siswa */}
+                            {/* Input Pencarian Nama Siswa */}
                             <div className="flex flex-col gap-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest">Cari Siswa</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Cari Siswa</label>
                                 <input
                                     type="text"
-                                    placeholder="NAMA SISWA..."
-                                    className="bg-gray-50 border-2 border-gray-100 text-gray-700 py-2 px-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 text-xs font-bold w-full md:w-56"
+                                    placeholder="Nama siswa..."
+                                    className="bg-gray-50 border-2 border-gray-100 text-gray-700 py-2 px-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 text-sm font-bold"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -84,9 +84,9 @@ const RiwayatNilai = () => {
 
                             {/* Filter Paket Kuis */}
                             <div className="flex flex-col gap-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest">Filter Kuis</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Filter Kuis</label>
                                 <select
-                                    className="bg-gray-50 border-2 border-gray-100 text-gray-700 py-2 px-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 text-xs font-bold w-full md:w-56 cursor-pointer"
+                                    className="bg-gray-50 border-2 border-gray-100 text-gray-700 py-2 px-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 text-sm font-bold cursor-pointer"
                                     value={filterKuis}
                                     onChange={(e) => setFilterKuis(e.target.value)}
                                 >
@@ -100,53 +100,55 @@ const RiwayatNilai = () => {
                     )}
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50/50 border-b border-gray-100">
-                            <tr className="text-gray-500 text-[11px] font-black uppercase tracking-wider">
-                                <th className="px-8 py-5">Paket Kuis</th>
-                                {role === "GURU" && <th className="px-8 py-5">Siswa</th>}
-                                <th className="px-8 py-5 text-center">Skor</th>
-                                <th className="px-8 py-5 text-center">Kecepatan</th>
-                                <th className="px-8 py-5 text-center">Tanggal</th>
-                                <th className="px-8 py-5 text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {dataFiltered.map((item, index) => (
-                                <tr key={index} className="hover:bg-blue-50/20 transition-colors">
-                                    <td className="px-8 py-6">
-                                        <p className="font-bold text-gray-800 text-sm">
-                                            {daftarKuis.find(k => k.id === item.ID_KUIS)?.JUDUL_KUIS || "Kuis"}
-                                        </p>
-                                        <p className="text-[9px] text-gray-400">ID: {item.ID_KUIS?.substring(0,6)}</p>
-                                    </td>
-                                    {role === "GURU" && (
-                                        <td className="px-8 py-6">
-                                            <p className="font-bold text-gray-800 text-sm uppercase">{item.NAMA_SISWA}</p>
-                                        </td>
-                                    )}
-                                    <td className="px-8 py-6 text-center text-xl font-black">
-                                        <span className={item.SKOR_AKHIR >= 70 ? 'text-green-500' : 'text-orange-500'}>
-                                            {item.SKOR_AKHIR}
-                                        </span>
-                                    </td>
-                                    <td className="px-8 py-6 text-center text-sm font-bold text-gray-600">{item.DURASI_KERJA_TAMPILAN}</td>
-                                    <td className="px-8 py-6 text-center text-sm text-gray-400 font-medium">
-                                        {item.WAKTU_SUBMIT?.toDate().toLocaleDateString("id-ID", { day: '2-digit', month: 'short', year: 'numeric' })}
-                                    </td>
-                                    <td className="px-8 py-6 text-center">
-                                        <span className="px-3 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-500 border border-blue-100 uppercase">
-                                            {item.STATUS || "SELESAI"}
-                                        </span>
-                                    </td>
+                <div className="p-4 md:p-0">
+                    <div className="hidden md:block overflow-x-auto overflow-y-auto max-h-[70vh] scrollbar-thin">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-100">
+                                <tr className="text-gray-500 text-[11px] font-black uppercase tracking-wider">
+                                    <th className="px-8 py-5">Paket Kuis</th>
+                                    {role === "GURU" && <th className="px-8 py-5">Siswa</th>}
+                                    <th className="px-8 py-5">Skor</th>
+                                    <th className="px-8 py-5">Kecepatan</th>
+                                    <th className="px-8 py-5">Tanggal</th>
+                                    <th className="px-8 py-5 text-center">Status</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {dataFiltered.map((item) => (
+                                    <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
+                                        <td className="px-8 py-5">
+                                            <p className="font-bold text-gray-800 text-sm">
+                                                {daftarKuis.find(k => k.id === item.ID_KUIS)?.JUDUL_KUIS || "Nama Tidak Ditemukan"}
+                                            </p>
+                                            <p className="text-[9px] text-gray-400">ID: {item.ID_KUIS?.substring(0,6)}</p>
+                                        </td>
+                                        {role === "GURU" && (
+                                            <td className="px-8 py-5">
+                                                <p className="font-bold text-gray-800 text-sm uppercase">{item.NAMA_SISWA}</p>
+                                            </td>
+                                        )}
+                                        <td className="px-8 py-5 text-xl font-black">
+                                            <span className={item.SKOR_AKHIR >= 80 ? 'text-green-600' : 'text-orange-500'}>
+                                                {item.SKOR_AKHIR}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-5 text-sm font-bold text-gray-600">{item.DURASI_KERJA_TAMPILAN}</td>
+                                        <td className="px-8 py-5 text-sm text-gray-500 font-medium">
+                                            {item.WAKTU_SUBMIT?.toDate().toLocaleDateString("id-ID", { day: '2-digit', month: 'long', year: 'numeric' })}
+                                        </td>
+                                        <td className="px-8 py-5 text-center">
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase">
+                                                {item.STATUS || "SELESAI"}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div className="bg-gray-50/50 p-6 text-center border-t border-gray-100">
+                <div className="bg-gray-50 p-6 text-center border-t border-gray-100">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                         Total: {dataFiltered.length} Record Terdeteksi
                     </p>

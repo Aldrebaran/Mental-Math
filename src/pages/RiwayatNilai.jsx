@@ -8,6 +8,7 @@ const RiwayatNilai = () => {
     const [semuaHasil, setSemuaHasil] = useState([]);
     const [filterKuis, setFilterKuis] = useState("Semua");
     const [daftarKuis, setDaftarKuis] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         const checkRoleAndFetchData = async () => {
@@ -44,29 +45,51 @@ const RiwayatNilai = () => {
         checkRoleAndFetchData();
     }, []);
 
-    const dataFiltered = filterKuis === "Semua" 
-        ? semuaHasil 
-        : semuaHasil.filter(h => h.ID_KUIS === filterKuis);
+    const dataFiltered = semuaHasil.filter(h => {
+    const matchesKuis = filterKuis === "Semua" || h.ID_KUIS === filterKuis;
+    
+    const matchesSearch = h.NAMA_SISWA?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesKuis && matchesSearch;
+    });
 
     if (loading) return <div className="flex justify-center items-center h-screen font-bold text-white uppercase tracking-widest">Memuat Data...</div>;
 
     return (
-        <div className="min-h-screen bg-[#B2A4D4] p-4 pt-20 md:pt-8 md:p-8 font-sans w-full">
-            <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-lg overflow-hidden">
-                
-                <div className="p-6 md:p-8 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-black text-gray-800 uppercase tracking-tight">RIWAYAT NILAI</h1>
-                        <p className="text-gray-500 text-sm mt-1">
-                            {role === "GURU" ? "Data hasil pengerjaan kuis seluruh siswa." : "Pantau progres belajar dan skormu di sini."}
-                        </p>
-                    </div>
+    <div className="min-h-screen bg-[#B2A4D4] p-4 pt-28 md:pt-12 md:p-8 font-sans w-full">
+        <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,0.1)] overflow-hidden border-4 border-black">
+            
+            {/* HEADER AREA */}
+            <div className="p-8 md:p-10 border-b-4 border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gray-50/50">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-black text-gray-800 uppercase tracking-tighter">RIWAYAT NILAI</h1>
+                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+                        {role === "GURU" ? "• Data hasil pengerjaan kuis seluruh siswa" : "• Pantau progres belajar dan skormu"}
+                    </p>
+                </div>
 
-                    {role === "GURU" && (
-                        <div className="flex flex-col gap-1">
+                {role === "GURU" && (
+                    <div className="flex flex-col md:flex-row gap-4 w-full lg:w-auto">
+                        {/* INPUT PENCARIAN NAMA */}
+                        <div className="flex flex-col gap-2 w-full md:w-64">
+                            <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Cari Siswa</label>
+                            <div className="bg-white border-4 border-black rounded-2xl flex items-center px-3 py-1.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                                <input
+                                    type="text"
+                                    placeholder="NAMA SISWA..."
+                                    className="w-full text-xs font-black outline-none bg-transparent uppercase"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                        </div>
+
+                        {/* FILTER PAKET KUIS */}
+                        <div className="flex flex-col gap-2 w-full md:w-64">
                             <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Filter Paket Kuis</label>
                             <select
-                                className="bg-gray-50 border-2 border-gray-100 text-gray-700 py-2 px-4 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 text-sm font-bold"
+                                className="bg-white border-4 border-black text-gray-700 py-2 px-4 rounded-2xl outline-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xs font-black uppercase cursor-pointer h-11.5"
                                 value={filterKuis}
                                 onChange={(e) => setFilterKuis(e.target.value)}
                             >
@@ -76,83 +99,41 @@ const RiwayatNilai = () => {
                                 ))}
                             </select>
                         </div>
-                    )}
-                </div>
-
-                <div className="p-4 md:p-0">
-                    
-                    <div className="block md:hidden space-y-4 max-h-125 overflow-y-auto p-1">
-                        {dataFiltered.length > 0 ? dataFiltered.map((item) => (
-                            <div key={item.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-200 shadow-sm">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="max-w-[70%]">
-                                        <p className="text-[10px] font-black text-orange-500 uppercase mb-1">Paket Kuis</p>
-                                        <p className="font-bold text-gray-800 mb-2">
-                                            {daftarKuis.find(k => k.id === item.ID_KUIS)?.JUDUL_KUIS || "Memuat..."}
-                                        </p>
-                                        
-                                        <p className="text-[10px] font-black text-blue-500 uppercase mb-1">Nama Siswa</p>
-                                        <p className="font-bold text-gray-800 wrap-break-words">{item.NAMA_SISWA}</p>
-
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase mb-1">Skor</p>
-                                        <p className={`text-2xl font-black ${item.SKOR_AKHIR >= 80 ? 'text-green-600' : 'text-orange-500'}`}>{item.SKOR_AKHIR}</p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 py-3 border-t border-gray-200">
-                                    <div>
-                                        <p className="text-[9px] font-bold text-gray-400 uppercase italic">Kecepatan</p>
-                                        <p className="text-sm font-bold text-gray-700">{item.DURASI_KERJA_TAMPILAN || "00:00"}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[9px] font-bold text-gray-400 uppercase italic">Tanggal</p>
-                                        <p className="text-sm font-bold text-gray-700">
-                                            {item.WAKTU_SUBMIT?.toDate().toLocaleDateString("id-ID", { day: '2-digit', month: 'short' })}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="mt-2 pt-3 border-t border-gray-200">
-                                    <span className="block text-center py-2 rounded-lg text-[10px] font-black bg-blue-100 text-blue-700 uppercase">
-                                        {item.STATUS || "SELESAI"}
-                                    </span>
-                                </div>
-                            </div>
-                        )) : (
-                            <div className="py-20 text-center opacity-30 font-black uppercase text-xs">Belum ada data</div>
-                        )}
                     </div>
+                )}
+            </div>
 
-                    <div className="hidden md:block overflow-x-auto overflow-y-auto max-h-137.5 scrollbar-thin">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-100">
-                                <tr className="text-gray-500 text-[11px] font-black uppercase tracking-wider">
-                                    <th className="px-8 py-5">Paket Kuis</th>
-                                    {role === "GURU" && <th className="px-8 py-5">Siswa</th>}
-                                    <th className="px-8 py-5">Skor</th>
-                                    <th className="px-8 py-5">Kecepatan</th>
-                                    <th className="px-8 py-5">Tanggal</th>
-                                    <th className="px-8 py-5 text-center">Status</th>
+            {/* TABLE AREA */}
+            <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                    <div className="max-h-[60vh] overflow-y-auto mt-2">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="sticky top-0 z-10 bg-white border-b-4 border-black">
+                                <tr className="text-black text-[11px] font-black uppercase tracking-wider text-left">
+                                    <th className="px-8 py-6">Paket Kuis</th>
+                                    {role === "GURU" && <th className="px-8 py-6">Siswa</th>}
+                                    <th className="px-8 py-6">Skor</th>
+                                    <th className="px-8 py-6">Kecepatan</th>
+                                    <th className="px-8 py-6">Tanggal</th>
+                                    <th className="px-8 py-6 text-center">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {dataFiltered.map((item) => (
-                                    <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
+                            <tbody className="bg-white divide-y divide-gray-100">
+                                {dataFiltered.map((item, index) => (
+                                    <tr key={index} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-8 py-5">
-                                            <p className="font-bold text-gray-800 text-sm">
-                                                {daftarKuis.find(k => k.id === item.ID_KUIS)?.JUDUL_KUIS || "Nama Tidak Ditemukan"}
-                                            </p>
-                                            <p className="text-[9px] text-gray-400">ID: {item.ID_KUIS?.substring(0,6)}</p>
+                                            <div className="text-xs font-black text-gray-800 uppercase">{item.JUDUL_KUIS || "Kuis Tanpa Judul"}</div>
+                                            <div className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{item.ID_KUIS}</div>
                                         </td>
-
                                         {role === "GURU" && (
                                             <td className="px-8 py-5">
-                                                <p className="font-bold text-gray-800 text-sm">{item.NAMA_SISWA}</p>
-                                                <p className="text-[9px] text-gray-400">ID: {item.ID_SISWA?.substring(0,8)}</p>
+                                                <div className="text-sm font-black text-gray-800 uppercase tracking-tighter">{item.NAMA_SISWA}</div>
                                             </td>
                                         )}
                                         <td className="px-8 py-5">
-                                            <span className={`text-xl font-black ${item.SKOR_AKHIR >= 80 ? 'text-green-600' : 'text-orange-500'}`}>{item.SKOR_AKHIR}</span>
+                                            <span className={`inline-block px-3 py-1 rounded-lg border-2 border-black text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-white ${item.SKOR >= 70 ? 'bg-green-500' : 'bg-yellow-500'}`}>
+                                                {item.SKOR}
+                                            </span>
                                         </td>
                                         <td className="px-8 py-5 text-sm font-bold text-gray-600">{item.DURASI_KERJA_TAMPILAN}</td>
                                         <td className="px-8 py-5 text-sm text-gray-500">
@@ -169,14 +150,15 @@ const RiwayatNilai = () => {
                         </table>
                     </div>
                 </div>
+            </div>
 
-                <div className="bg-gray-50 p-4 text-center border-t border-gray-100">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                        Total: {dataFiltered.length} Record Terdeteksi
-                    </p>
-                </div>
+            <div className="bg-gray-50 p-4 text-center border-t border-gray-100">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Total: {dataFiltered.length} Record Terdeteksi
+                </p>
             </div>
         </div>
+    </div>
     );
 };
 

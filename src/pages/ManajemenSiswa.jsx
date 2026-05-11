@@ -80,24 +80,22 @@ const ManajemenSiswa = ()  =>{
         }
     };
 
-    useEffect(() => {
-        fetchTahunAjaran();
-    }, []);
+useEffect(() => {
+    fetchKelas();
+    fetchTahunAjaran();
+}, []); 
 
-    const fetchSiswa = useCallback(async () => {
+const fetchSiswa = useCallback(async () => {
+    if (listTahunAjaran.length === 0) return;
+
     setLoading(true);
     try {
         let q = collection(db, "SISWA");
-
         const tahunObj = listTahunAjaran.find(t => t.id === selectedTahun);
-        const teksTahun = tahunObj ? tahunObj.TAHUN: "";
+        const teksTahun = tahunObj ? tahunObj.TAHUN : "";
 
         if (selectedKelas && teksTahun) {
-            q = query(
-                collection(db, "SISWA"), 
-                where('ID_KELAS', "==", selectedKelas),
-                where('TAHUN_AJARAN', "==", teksTahun) 
-            ); 
+            q = query(collection(db, "SISWA"), where('ID_KELAS', "==", selectedKelas), where('TAHUN_AJARAN', "==", teksTahun));
         } else if (selectedKelas) {
             q = query(collection(db, "SISWA"), where('ID_KELAS', "==", selectedKelas));
         } else if (teksTahun) {
@@ -105,17 +103,18 @@ const ManajemenSiswa = ()  =>{
         }
 
         const snap = await getDocs(q);
-        const hasilData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        setDaftarSiswa(hasilData);
+        setDaftarSiswa(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         setSelectedSiswaIds([]); 
-
     } catch (err) {
-        console.error("Error Fetch Siswa:", err);
+        console.error("Gagal Fetch Siswa:", err);
     } finally {
         setLoading(false);
     }
 }, [selectedKelas, selectedTahun, listTahunAjaran]); 
+
+useEffect(() => {
+    fetchSiswa();
+}, [fetchSiswa]);
 
     const fetchDataModal = async () => {
         try {
@@ -126,11 +125,6 @@ const ManajemenSiswa = ()  =>{
         }
     };
 
-    useEffect(() => {
-        fetchKelas();
-        fetchSiswa();
-        fetchTahunAjaran();
-    }, [fetchSiswa]);
 
     const handleTambahKelas = async () => {
         if (!newKelasName.trim() || !selectedTahun) return;

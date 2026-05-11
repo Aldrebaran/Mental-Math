@@ -120,8 +120,8 @@ const RiwayatNilai = () => {
                                             <p className="font-bold text-gray-800 text-sm">
                                                 {daftarKuis.find(k => k.id === item.ID_KUIS)?.JUDUL_KUIS || "Nama Tidak Ditemukan"}
                                             </p>
-                                            <p className="text-[9px] text-gray-400">ID: {item.ID_KUIS?.substring(0,6)}</p>
                                         </td>
+                                        
                                         {role === "GURU" && (
                                             <td className="px-8 py-5">
                                                 <p className="font-bold text-gray-800 text-sm uppercase">{item.NAMA_SISWA}</p>

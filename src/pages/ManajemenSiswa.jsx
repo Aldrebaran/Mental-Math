@@ -287,8 +287,39 @@ useEffect(() => {
             setSelectedSiswaHapus(filteredSiswa.map(s => s.id));
         }
     };
+
+    const handleSelectAll = () => {
+    let dataTampil = [];
+
+    if (activeTab === "Pindah Siswa" || activeTab === "Hapus Siswa") {
+        dataTampil = dataSiswaModal.filter(s => {
+            const mSearch = s.NAMA_SISWA?.toLowerCase().includes(searchTerm.toLowerCase());
+            // Filter kelas berbeda sedikit antar tab, kita buat fleksibel:
+            const targetKelas = activeTab === "Hapus Siswa" ? selectedHapusKelas : filterKelasSiswa;
+            const mKelas = targetKelas ? (s.ID_KELAS === targetKelas || s.KELAS === targetKelas) : true;
+            return mSearch && mKelas;
+        });
+
+        const targetState = activeTab === "Hapus Siswa" ? selectedSiswaHapus : selectedSiswaIds;
+        const setTargetState = activeTab === "Hapus Siswa" ? setSelectedSiswaHapus : setSelectedSiswaIds;
+        
+        const semuaTerpilih = dataTampil.length > 0 && dataTampil.every(s => targetState.includes(s.id));
+        setTargetState(semuaTerpilih ? [] : dataTampil.map(s => s.id));
+    } 
     
-            
+    else if (activeTab === "Edit Kelas") {
+        dataTampil = daftarKelas.filter(k => k.NAMA_KELAS?.toLowerCase().includes(searchTerm.toLowerCase()));
+        const semuaTerpilih = dataTampil.length > 0 && dataTampil.every(k => selectedKelasIds.includes(k.id));
+        setSelectedKelasIds(semuaTerpilih ? [] : dataTampil.map(k => k.id));
+    }
+
+    else if (activeTab === "Edit Tahun Ajaran") {
+        dataTampil = listTahunAjaran.filter(t => t.TAHUN?.toLowerCase().includes(searchTahun.toLowerCase()));
+        const semuaTerpilih = dataTampil.length > 0 && dataTampil.every(t => selectedTahunIds.includes(t.id));
+        setSelectedTahunIds(semuaTerpilih ? [] : dataTampil.map(t => t.id));
+    }
+};
+
     return (
         <div className="flex flex-col items-center w-full p-4 md:p-8 space-y-8 pt-20 md:pt-8">
             <h1 className="text-lg md:text-2xl font-black text-black tracking-tight uppercase text-center leading-tight px-2">
@@ -512,15 +543,13 @@ useEffect(() => {
                                             <div className="p-3 bg-white/10 border-b-4 border-black space-y-3">
                                                 <div className="flex justify-between items-center px-1">
                                                     <h4 className="text-[10px] font-black uppercase text-white leading-none">DAFTAR SISWA (ASAL: {filterKelasSiswa || "SEMUA"})</h4>
+
                                                     <button
-                                                        onClick={() => {
-                                                            const filtered = dataSiswaModal.filter(s => filterKelasSiswa ? s.KELAS === filterKelasSiswa : true);
-                                                            setSelectedSiswaIds(selectedSiswaIds.length === filtered.length ? [] : filtered.map(s => s.id));
-                                                        }}
-                                                        className="text-[9px] font-black underline uppercase text-white hover:text-yellow-300"
-                                                    >
-                                                        {selectedSiswaIds.length > 0 ? "Batal Semua" : "Pilih Semua"}
-                                                    </button>
+                                                    onClick={() => handleSelectAll()} 
+
+                                                    className="text-[9px] font-black underline uppercase text-white hover:text-yellow-300">
+                                                    {selectedSiswaIds.length > 0 ? "Batal Semua" : "Pilih Semua"}
+                                                     </button>
                                                 </div>
 
                                                 <div className="flex gap-2">

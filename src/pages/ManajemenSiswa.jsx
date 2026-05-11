@@ -90,7 +90,7 @@ const ManajemenSiswa = ()  =>{
         let q = collection(db, "SISWA");
 
         const tahunObj = listTahunAjaran.find(t => t.id === selectedTahun);
-        const teksTahun = tahunObj ? tahunObj.TAHUN_AJARAN : "";
+        const teksTahun = tahunObj ? tahunObj.TAHUN: "";
 
         if (selectedKelas && teksTahun) {
             q = query(

@@ -187,7 +187,7 @@ const KuisMainContent = ({role}) => {
             return {
                 id: doc.id,
                 ...d,
-                title: d.JUDUL,
+                title: d.JUDUL_KUIS,
                 durationSeconds: actualRemaining,
                 totalQuestions: d.LIST_SOAL?.length || 0
             };

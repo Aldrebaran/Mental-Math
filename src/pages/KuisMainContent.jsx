@@ -142,67 +142,71 @@ const KuisMainContent = ({role}) => {
     });
 
     useEffect(() => {
-    const fetchKuisSiswa = async () => {
-        const user = auth.currentUser;
-        if (!user) return;
+        let unsubscribe;
 
-        try {
-            const userDoc = await getDoc(doc(db, "SISWA", user.uid));
-            
-            if (userDoc.exists()) {
-                const userData = userDoc.data(); 
+        const startFetching = async () => {
+            const user = auth.currentUser;
+            if (!user) return;
 
-                const q = query(
-                    collection(db, "KUIS"),
-                    where("STATUS", "==", "AKTIF"),
-                    where("ID_KELAS", "==", userData.ID_KELAS)
-                );
+            try {
+                if (role?.toUpperCase() === "SISWA") {
+                    const userDoc = await getDoc(doc(db, "SISWA", user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        
+                        const q = query(
+                            collection(db, "KUIS"),
+                            where("STATUS", "==", "AKTIF"),
+                            where("ID_KELAS", "==", userData.ID_KELAS)
+                        );
 
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const dataKuis = snapshot.docs.map(doc => {
-                        const d = doc.data();
-                        const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
-                        const sekarang = new Date();
-                        const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
+                        unsubscribe = onSnapshot(q, (snapshot) => {
+                            const dataKuis = snapshot.docs.map(doc => {
+                                const d = doc.data();
+                                const finishDate = d.WAKTU_SELESAI?.toDate() || new Date();
+                                const sekarang = new Date();
+                                const actualRemaining = Math.max(0, Math.floor((finishDate - sekarang) / 1000));
 
-                        return {
-                            id: doc.id,
-                            ...d,
-                            title: d.JUDUL_KUIS,
-                            durationSeconds: actualRemaining,
-                            totalQuestions: d.LIST_SOAL?.length || 0 
-                        };  
-                    });
-
-                    setLocalQuizzes(dataKuis);
-
-                    setTimeLeft(prev => {
-                        const newTimes = {...prev};
-                        dataKuis.forEach(q => {
-                            newTimes[q.id] = q.durationSeconds;
+                                return {
+                                    id: doc.id,
+                                    ...d,
+                                    title: d.JUDUL_KUIS,
+                                    durationSeconds: actualRemaining,
+                                    totalQuestions: d.LIST_SOAL?.length || 0
+                                };  
+                            });
+                            setLocalQuizzes(dataKuis);
+                            
+                            setTimeLeft(prev => {
+                                const newTimes = {...prev};
+                                dataKuis.forEach(q => { newTimes[q.id] = q.durationSeconds; });
+                                return newTimes;
+                            });
                         });
-                        return newTimes;
+                    }
+                } else {
+                    const q = query(collection(db, "KUIS"), where("STATUS", "==", "AKTIF"));
+                    unsubscribe = onSnapshot(q, (snapshot) => {
+                        const dataKuis = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data(),
+                            title: doc.data().JUDUL_KUIS,
+                            totalQuestions: doc.data().LIST_SOAL?.length || 0
+                        }));
+                        setLocalQuizzes(dataKuis);
                     });
-                }, (error) => {
-                    console.error("Gagal mengambil data kuis:", error);
-                });
-
-                return unsubscribe;
+                }
+            } catch (error) {
+                console.error("Gagal load kuis:", error);
             }
-        } catch (error) {
-            console.error("Error pada proses pengambilan kuis:", error);
-        }
-    };
+        };
 
-
-    if (role === "SISWA") {
-        const unsubPromise = fetchKuisSiswa();
+        startFetching();
 
         return () => {
-            unsubPromise.then(unsub => unsub && unsub());
+            if (unsubscribe) unsubscribe();
         };
-    }
-}, [role]); 
+    }, [role]);
 
     useEffect(() => {
     const fetchStats = async () => {

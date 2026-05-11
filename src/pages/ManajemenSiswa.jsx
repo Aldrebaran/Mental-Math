@@ -281,7 +281,7 @@ useEffect(() => {
     if (activeTab === "Pindah Siswa" || activeTab === "Hapus Siswa") {
         dataTampil = dataSiswaModal.filter(s => {
             const mSearch = s.NAMA_SISWA?.toLowerCase().includes(searchTerm.toLowerCase());
-            // Filter kelas berbeda sedikit antar tab, kita buat fleksibel:
+      
             const targetKelas = activeTab === "Hapus Siswa" ? selectedHapusKelas : filterKelasSiswa;
             const mKelas = targetKelas ? (s.ID_KELAS === targetKelas || s.KELAS === targetKelas) : true;
             return mSearch && mKelas;
@@ -639,8 +639,8 @@ useEffect(() => {
 
                                                         {selectedHapusKelas && (
                                                             <button 
-                                                                onClick={() => handleSelectAll}
-                                                                className="text-[9px] font-black underline uppercase text-white hover:text-yellow-300 transition-colors"
+                                                                onClick={() => handleSelectAll()}
+                                                                className="text-[9px] font-black underline uppercase text-white hover:text-yellow-300 transition-colors shrink-0"
                                                             >
                                                                 {selectedSiswaHapus.length > 0 && selectedSiswaHapus.length === daftarSiswa.filter(s => selectedHapusKelas && s.NAMA_SISWA?.toLowerCase().includes(searchSiswaHapus.toLowerCase())).length
                                                                     ? "Batal Semua" : "Pilih Semua"

@@ -208,34 +208,54 @@ const KuisMainContent = ({role}) => {
     };
 }, [role]);
 
-    useEffect(() => {
+   useEffect(() => {
     const fetchStats = async () => {
         const user = auth.currentUser;
         if (!user) return;
 
         try {
-            let q;
             if (role?.toUpperCase() === 'GURU') {
-                q = query(collection(db, "HASIL_KUIS"));
+                const snapKuis = await getDocs(collection(db, "KUIS"));
+                const totalPaketKuis = snapKuis.size;
+
+                const snapHasil = await getDocs(collection(db, "HASIL_KUIS"));
+                const docsHasil = snapHasil.docs.map(d => d.data());
+
+                if (docsHasil.length > 0) {
+                    const totalPengerjaan = docsHasil.length;
+                    const sumNilai = docsHasil.reduce((acc, curr) => acc + (curr.SKOR_AKHIR || 0), 0);
+                    const sumWaktu = docsHasil.reduce((acc, curr) => acc + (curr.DURASI_KERJA_DETIK || 0), 0);
+
+                    setStats({
+                        totalKuis: totalPaketKuis, 
+                        rataNilai: Math.round(sumNilai / totalPengerjaan),
+                        rataWaktu: Math.round(sumWaktu / totalPengerjaan)
+                    });
+                } else {
+                    setStats({
+                        totalKuis: totalPaketKuis,
+                        rataNilai: 0,
+                        rataWaktu: 0
+                    });
+                }
             } else {
-                q = query(collection(db, "HASIL_KUIS"), where("ID_SISWA", "==", user.uid));
-            }
+                const q = query(collection(db, "HASIL_KUIS"), where("ID_SISWA", "==", user.uid));
+                const snap = await getDocs(q);
+                const docsSiswa = snap.docs.map(d => d.data());
 
-            const snap = await getDocs(q);
-            const docs = snap.docs.map(d => d.data());
+                if (docsSiswa.length > 0) {
+                    const totalSiswa = docsSiswa.length;
+                    const sumNilaiSiswa = docsSiswa.reduce((acc, curr) => acc + (curr.SKOR_AKHIR || 0), 0);
+                    const sumWaktuSiswa = docsSiswa.reduce((acc, curr) => acc + (curr.DURASI_KERJA_DETIK || 0), 0);
 
-            if (docs.length > 0) {
-                const total = docs.length;
-                
-                const sumNilai = docs.reduce((acc, curr) => acc + (curr.SKOR_AKHIR || 0), 0);
-                
-                const sumWaktu = docs.reduce((acc, curr) => acc + (curr.DURASI_KERJA_DETIK || 0), 0);
-
-                setStats({
-                    totalKuis: total,
-                    rataNilai: Math.round(sumNilai / total),
-                    rataWaktu: Math.round(sumWaktu / total)
-                });
+                    setStats({
+                        totalKuis: totalSiswa,
+                        rataNilai: Math.round(sumNilaiSiswa / totalSiswa),
+                        rataWaktu: Math.round(sumWaktuSiswa / totalSiswa)
+                    });
+                } else {
+                    setStats({ totalKuis: 0, rataNilai: 0, rataWaktu: 0 });
+                }
             }
         } catch (e) {
             console.error("Gagal hitung statistik:", e);
@@ -244,8 +264,6 @@ const KuisMainContent = ({role}) => {
 
     fetchStats();
 }, [role]); 
-
-
 
     useEffect(() => {
         const timer = setInterval(() => {
